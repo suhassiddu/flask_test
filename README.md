@@ -3,7 +3,7 @@
 Hosted on [https://suhasflask.herokuapp.com/](https://suhasflask.herokuapp.com/)
 
 # Check with Curl
-
+```
 $ curl https://suhasflask.herokuapp.com/ifsc/<string:ifsc_code>
 
 Example:
@@ -37,4 +37,4 @@ $ curl  -H 'Content-Type: application/json' -H 'Accept: application/json' https:
   },
   {
     "ifsc": "HDFC0000002",
-
+```
