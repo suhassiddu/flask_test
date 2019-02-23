@@ -86,7 +86,7 @@ class Ifsc(Resource):
             return {}
 
 api.add_resource(Ifsc, '/ifsc/<string:ifsc>', '/ifsc/')
-api.add_resource(Banks, '/banks/')
+api.add_resource(Banks, '/banks/', '/banks')
 
 if __name__ == '__main__':
     app.run()
