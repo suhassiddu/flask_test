@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Flask Api Test</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.core.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<style>
+.loader {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <h2>Ifsc Api Test</h2>
+    <form>
+        <div class="form-group">
+            <label for="ifsc_code">Ifsc Code:</label>
+            <input class="form-control type="text" value="abhy0065004" id="ifsc_code"></input>
+        </div>
+        <div class="form-group">
+            <input class="btn btn-primary" type="button" value="Search" onclick="ifsc_refresh()"></input>
+        </div>
+        <div id="ifsc"></div>
+    </form>
+</div>
+<div class="container">
+    <h2>Bank Api Test</h2>
+    <form>
+        <div class="form-group">
+            <label for="bank_name">Bank Name:</label>
+            <input class="form-control" type="text" value="hdfc bank" id="bank_name"></input>
+        </div>
+        <div class="form-group">
+            <label for="city">City:</label>
+            <input class="form-control" type="text" value="mumbai" id="city"></input>
+        </div>
+        <div class="form-group">
+            <input class="btn btn-primary" type="button" value="Search" onclick="banks_refresh()"></input>
+        </div>
+        <div id="banks"></div>
+    </form>
+</div>
+<script>
+var abort_token = axios.CancelToken
+var abort_ifsc = null
+var ifsc_out = document.getElementById('ifsc')
+var ifsc_code_el = document.getElementById('ifsc_code')
+function ifsc_refresh(){
+    if(abort_ifsc != null) abort_ifsc()
+    ifsc_out.innerHTML = `<div class="loader"></div>`
+    var ifsc_code = ifsc_code_el.value
+    ifsc_code = ifsc_code.trim()
+    ifsc_code = ifsc_code.toLowerCase()
+    axios.get(`/ifsc/${ifsc_code}`, {
+            cancelToken: new abort_token( c => abort_ifsc = c)
+        })
+        .then( req => {
+            let res = req['data']
+            if(!_.isEmpty(res)){
+                ifsc_out.innerHTML = `
+                    <table class="table">
+                        <tr><th>Name</th><td>${res['name'].toLowerCase()}</td></tr>
+                        <tr><th>Address</th><td>${res['address'].toLowerCase()}</td></tr>
+                        <tr><th>Branch</th><td>${res['branch'].toLowerCase()}</td></tr>
+                        <tr><th>City</th><td>${res['city'].toLowerCase()}</td></tr>
+                        <tr><th>District</th><td>${res['district'].toLowerCase()}</td></tr>
+                        <tr><th>State</th><td>${res['state'].toLowerCase()}</td></tr>
+                    </table>
+                `
+            } else{
+                ifsc_out.innerHTML = `
+                    <div class="alert alert-info">
+                        <strong>Info!</strong> Sorry there is no match !!!
+                    </div>`
+            }
+        })
+        .catch( err => {
+            console.log(err)
+            ifsc_out.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>Error!</strong> Some issue with the backend !!! Lets check
+                    </div>`
+        })
+}
+ifsc_refresh()
+</script>
+<script>
+var abort_token = axios.CancelToken
+var abort_banks = null
+var banks_out = document.getElementById('banks')
+var bank_name_el = document.getElementById('bank_name')
+var bank_city_el = document.getElementById('city')
+
+function banks_refresh(){
+    if(abort_banks != null) abort_banks()
+    banks_out.innerHTML = `<div class="loader"></div>`
+    var bank_name = bank_name_el.value.trim().toLowerCase()
+    var bank_city = bank_city_el.value.trim().toLowerCase()
+    axios.put('/banks/', {
+            'name': bank_name,
+            'city': bank_city
+        },{
+            cancelToken: new abort_token( c => abort_banks = c)
+        })
+        .then( req => {
+            let res = req['data']
+            if(res.length !== 0){
+                var t = `
+                    <table class="table">
+                        <tr>
+                            <th>Ifsc</th>
+                            <th>State</th>
+                            <th>District</th>
+                            <th>Branch</th>
+                            <th>Address</th>
+                        </tr>`
+               res.forEach(e => {
+                    t += `
+                        <tr>
+                            <td>${e['ifsc'].toLowerCase()}</td>
+                            <td>${e['state'].toLowerCase()}</td>
+                            <td>${e['district'].toLowerCase()}</td>
+                            <td>${e['branch'].toLowerCase()}</td>
+                            <td>${e['address'].toLowerCase()}</td>
+                       </tr>`
+               })
+               t += `</table>`
+               banks_out.innerHTML = t
+            } else{
+                banks_out.innerHTML = `
+                    <div class="alert alert-info">
+                        <strong>Info!</strong> Sorry there is no match !!!
+                    </div>`
+            }
+        })
+        .catch( err => {
+            console.log(err)
+            banks_out.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>Error!</strong> Some issue with the backend !!! Lets check
+                    </div>`
+        })
+}
+banks_refresh()
+</script>
+</body>
+</html>
